@@ -7,16 +7,46 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* ── Theme tokens ── */
+  :root {
+    --bg:          #0a0a0f;
+    --fg:          #e8e8e0;
+    --fg-muted:    rgba(232,232,224,0.35);
+    --fg-hint:     rgba(232,232,224,0.22);
+    --overlay-bg:  rgba(10,10,15,0.88);
+    --border:      rgba(255,255,255,0.08);
+    --btn-border:  rgba(255,255,255,0.25);
+    --btn-hover:   rgba(255,255,255,0.10);
+    --btn-active-border: rgba(255,255,255,0.6);
+    --accent:      #c8f060;
+    --accent-bg:   rgba(200,240,96,0.12);
+  }
+
+  :root.light {
+    --bg:          #f0ede6;
+    --fg:          #1a1a18;
+    --fg-muted:    rgba(26,26,24,0.40);
+    --fg-hint:     rgba(26,26,24,0.28);
+    --overlay-bg:  rgba(240,237,230,0.92);
+    --border:      rgba(0,0,0,0.10);
+    --btn-border:  rgba(0,0,0,0.22);
+    --btn-hover:   rgba(0,0,0,0.06);
+    --btn-active-border: rgba(0,0,0,0.55);
+    --accent:      #5a7a00;
+    --accent-bg:   rgba(90,122,0,0.10);
+  }
+
   body {
-    background: #0a0a0f;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     font-family: 'Courier New', monospace;
-    color: #e8e8e0;
+    color: var(--fg);
     overflow: hidden;
+    transition: background 0.25s, color 0.25s;
   }
 
   #wrapper {
@@ -29,12 +59,12 @@
 
   canvas {
     display: block;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
     border-radius: 4px;
     cursor: none;
+    transition: border-color 0.25s;
   }
 
-  /* ── overlay shared styles ── */
   .overlay {
     position: absolute;
     inset: 0;
@@ -43,8 +73,9 @@
     align-items: center;
     justify-content: center;
     gap: 20px;
-    background: rgba(10,10,15,0.88);
+    background: var(--overlay-bg);
     border-radius: 4px;
+    transition: background 0.25s;
   }
 
   .overlay h1 {
@@ -52,13 +83,13 @@
     font-weight: 700;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: #fff;
+    color: var(--fg);
   }
 
   .overlay p {
     font-size: 13px;
     letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.45);
+    color: var(--fg-muted);
     text-align: center;
     line-height: 1.8;
   }
@@ -71,8 +102,8 @@
 
   button {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.25);
-    color: #e8e8e0;
+    border: 1px solid var(--btn-border);
+    color: var(--fg);
     font-family: 'Courier New', monospace;
     font-size: 12px;
     letter-spacing: 0.12em;
@@ -80,53 +111,71 @@
     padding: 10px 22px;
     border-radius: 3px;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
 
   button:hover, button.active {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.6);
+    background: var(--btn-hover);
+    border-color: var(--btn-active-border);
   }
 
   button.primary {
-    border-color: #c8f060;
-    color: #c8f060;
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   button.primary:hover {
-    background: rgba(200,240,96,0.12);
-    border-color: #c8f060;
+    background: var(--accent-bg);
   }
 
-  .diff-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .diff-row button {
-    font-size: 11px;
-    padding: 7px 14px;
-  }
+  .diff-row { display: flex; gap: 8px; }
+  .diff-row button { font-size: 11px; padding: 7px 14px; }
 
   .label {
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
+    color: var(--fg-muted);
     margin-bottom: -10px;
   }
 
   #hint-bar {
     font-size: 11px;
     letter-spacing: 0.06em;
-    color: rgba(255,255,255,0.22);
+    color: var(--fg-hint);
     text-align: center;
+  }
+
+  /* ── Theme toggle button (top-right of canvas) ── */
+  #theme-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: 1px solid var(--btn-border);
+    color: var(--fg);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    z-index: 10;
+    text-transform: uppercase;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  #theme-btn:hover {
+    background: var(--btn-hover);
+    border-color: var(--btn-active-border);
   }
 </style>
 </head>
 <body>
 <div id="wrapper">
   <canvas id="c"></canvas>
+
+  <!-- Theme toggle — visible at all times -->
+  <button id="theme-btn" onclick="toggleTheme()">☀ Light</button>
 
   <!-- Menu overlay -->
   <div class="overlay" id="menu">
@@ -175,31 +224,59 @@
 </div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
+// ── Theme ────────────────────────────────────────────────────────────────────
+const THEMES = {
+  dark: {
+    bg:        '#0a0a0f',
+    net:       'rgba(255,255,255,0.07)',
+    border:    'rgba(255,255,255,0.55)',
+    paddle:    '#ffffff',
+    ball:      '#ffffff',
+    ai:        '#8888cc',
+    score:     'rgba(255,255,255,0.18)',
+    flash:     [200, 240, 96],
+    prompt:    'rgba(255,255,255,0.30)',
+  },
+  light: {
+    bg:        '#f0ede6',
+    net:       'rgba(0,0,0,0.10)',
+    border:    'rgba(0,0,0,0.55)',
+    paddle:    '#1a1a18',
+    ball:      '#1a1a18',
+    ai:        '#4455aa',
+    score:     'rgba(0,0,0,0.14)',
+    flash:     [90, 122, 0],
+    prompt:    'rgba(0,0,0,0.30)',
+  },
+};
+
+let currentTheme = 'dark';
+let COLORS = { ...THEMES.dark };
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  COLORS = { ...THEMES[currentTheme] };
+  const isLight = currentTheme === 'light';
+  document.documentElement.classList.toggle('light', isLight);
+  document.getElementById('theme-btn').textContent = isLight ? '☾ Dark' : '☀ Light';
+}
+
+// ── Config ───────────────────────────────────────────────────────────────────
 const W = 800, H = 500;
 const PAD_W = 12, PAD_H = 80, PAD_RADIUS = 6;
 const BALL_R = 8;
 const WIN_SCORE = 7;
-const COLORS = {
-  bg: '#0a0a0f',
-  net: 'rgba(255,255,255,0.07)',
-  paddle: '#ffffff',
-  ball: '#ffffff',
-  score: '#ffffff',
-  flash: '#c8f060',
-  ai: '#8888cc',
-};
-const AI_SPEED = { easy: 2.8, medium: 4.2, hard: 6.2 };
-const AI_REACT = { easy: 0.04, medium: 0.09, hard: 0.28 }; // per-frame lerp to ball y
-const AI_ERR   = { easy: 28,  medium: 14,   hard: 5  };     // px random error
 
-// ── Canvas setup ────────────────────────────────────────────────────────────
+const AI_SPEED = { easy: 2.8, medium: 4.2, hard: 6.2 };
+const AI_REACT = { easy: 0.04, medium: 0.09, hard: 0.28 };
+const AI_ERR   = { easy: 28,  medium: 14,   hard: 5  };
+
+// ── Canvas setup ─────────────────────────────────────────────────────────────
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 canvas.width  = W;
 canvas.height = H;
 
-// Responsive scale
 function resizeCanvas() {
   const maxW = Math.min(window.innerWidth - 32, 900);
   const scale = maxW / W;
@@ -211,12 +288,11 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 // ── State ────────────────────────────────────────────────────────────────────
-let gameMode  = 1;       // 1 or 2
+let gameMode   = 1;
 let difficulty = 'medium';
-let gameState = 'menu';  // menu | playing | pause | scored | gameover
+let gameState  = 'menu';
 
-let ball, p1, p2, scores, flashTimer, lastTime, aiTarget, aiError;
-
+let ball, p1, p2, scores, flashTimer, borderFlashTimer, borderFlash, lastTime, aiTarget, aiError;
 const keys = {};
 
 function initObjects() {
@@ -230,6 +306,8 @@ function initObjects() {
   p2 = { y: H / 2 - PAD_H / 2, vy: 0 };
   scores = scores || { p1: 0, p2: 0 };
   flashTimer = 0;
+  borderFlashTimer = 0;
+  borderFlash = null;
   aiTarget = H / 2;
   aiError = (Math.random() * 2 - 1) * AI_ERR[difficulty];
 }
@@ -249,36 +327,28 @@ document.addEventListener('keydown', e => {
     if (gameState === 'playing') pauseGame();
     else if (gameState === 'pause') resumeGame();
   }
-  if ((e.key === ' ' || e.key === 'Enter') && gameState === 'scored') {
-    gameState = 'playing';
-  }
-  // prevent page scroll on arrow keys
+  if ((e.key === ' ' || e.key === 'Enter') && gameState === 'scored') gameState = 'playing';
   if (['ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
 });
 document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-// Mouse/touch — move P1 paddle toward cursor Y (1-player only)
-let mouseY = H / 2;
-let mouseMoved = false;
+let mouseY = H / 2, mouseMoved = false;
 canvas.addEventListener('mousemove', e => {
-  const rect  = canvas.getBoundingClientRect();
-  const scaleY = H / rect.height;
-  mouseY = (e.clientY - rect.top) * scaleY;
+  const rect = canvas.getBoundingClientRect();
+  mouseY = (e.clientY - rect.top) * (H / rect.height);
   mouseMoved = true;
 });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
-  const rect  = canvas.getBoundingClientRect();
-  const scaleY = H / rect.height;
-  mouseY = (e.touches[0].clientY - rect.top) * scaleY;
+  const rect = canvas.getBoundingClientRect();
+  mouseY = (e.touches[0].clientY - rect.top) * (H / rect.height);
 }, { passive: false });
-canvas.addEventListener('click', e => {
+canvas.addEventListener('click', () => {
   if (gameState === 'scored') gameState = 'playing';
 });
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 function updateAI(dt) {
-  // React is now a per-frame lerp factor (independent of dt so it's consistent)
   const react = AI_REACT[difficulty];
   aiTarget += (ball.y - aiTarget) * react;
   const targetY = aiTarget + aiError - PAD_H / 2;
@@ -290,20 +360,15 @@ function updateAI(dt) {
 
 // ── Physics ──────────────────────────────────────────────────────────────────
 function update(dt) {
-  // P1 keyboard — always takes priority
   const keyboardActive = keys['w'] || keys['W'] || keys['s'] || keys['S'];
   if (keys['w'] || keys['W']) p1.y -= 6 * dt * 60;
   if (keys['s'] || keys['S']) p1.y += 6 * dt * 60;
-  // P1 mouse (1-player only) — only when keyboard not held
   if (gameMode === 1 && mouseMoved && !keyboardActive) {
-    const targetY = mouseY - PAD_H / 2;
-    p1.y += (targetY - p1.y) * Math.min(1, dt * 14);
+    p1.y += (mouseY - PAD_H / 2 - p1.y) * Math.min(1, dt * 14);
   }
-  // Keep mouseY in sync when using keyboard so there's no snap on switch
   if (keyboardActive) mouseY = p1.y + PAD_H / 2;
   p1.y = clamp(p1.y, 0, H - PAD_H);
 
-  // P2 keyboard (2-player)
   if (gameMode === 2) {
     if (keys['ArrowUp'])   p2.y -= 6 * dt * 60;
     if (keys['ArrowDown']) p2.y += 6 * dt * 60;
@@ -312,44 +377,34 @@ function update(dt) {
     updateAI(dt);
   }
 
-  // Ball
   ball.x += ball.vx * dt * 60;
   ball.y += ball.vy * dt * 60;
 
-  // Top / bottom bounce
-  if (ball.y - BALL_R <= 0)      { ball.y = BALL_R;      ball.vy = Math.abs(ball.vy); }
-  if (ball.y + BALL_R >= H)      { ball.y = H - BALL_R;  ball.vy = -Math.abs(ball.vy); }
+  if (ball.y - BALL_R <= 0) { ball.y = BALL_R;     ball.vy =  Math.abs(ball.vy); borderFlash = 'top';    borderFlashTimer = 10; }
+  if (ball.y + BALL_R >= H) { ball.y = H - BALL_R; ball.vy = -Math.abs(ball.vy); borderFlash = 'bottom'; borderFlashTimer = 10; }
 
-  // Paddle P1 (left): x=20
   const p1x = 20;
-  if (ball.vx < 0 &&
-      ball.x - BALL_R <= p1x + PAD_W &&
-      ball.x + BALL_R >= p1x &&
+  if (ball.vx < 0 && ball.x - BALL_R <= p1x + PAD_W && ball.x + BALL_R >= p1x &&
       ball.y >= p1.y && ball.y <= p1.y + PAD_H) {
     ball.x = p1x + PAD_W + BALL_R;
     bouncePaddle(p1, 1);
   }
 
-  // Paddle P2 (right): x=W-20-PAD_W
   const p2x = W - 20 - PAD_W;
-  if (ball.vx > 0 &&
-      ball.x + BALL_R >= p2x &&
-      ball.x - BALL_R <= p2x + PAD_W &&
+  if (ball.vx > 0 && ball.x + BALL_R >= p2x && ball.x - BALL_R <= p2x + PAD_W &&
       ball.y >= p2.y && ball.y <= p2.y + PAD_H) {
     ball.x = p2x - BALL_R;
     bouncePaddle(p2, -1);
   }
 
-  // Score
   if (ball.x < -BALL_R * 2) { scored(2); return; }
   if (ball.x > W + BALL_R * 2) { scored(1); return; }
 }
 
 function bouncePaddle(pad, dir) {
-  // Angle based on where ball hits paddle (-1..1)
-  const rel = (ball.y - (pad.y + PAD_H / 2)) / (PAD_H / 2);
+  const rel   = (ball.y - (pad.y + PAD_H / 2)) / (PAD_H / 2);
   const angle = rel * (Math.PI / 4);
-  ball.speed = Math.min(ball.speed + 0.35, 14);
+  ball.speed  = Math.min(ball.speed + 0.35, 14);
   ball.vx = dir * ball.speed * Math.cos(angle);
   ball.vy = ball.speed * Math.sin(angle);
   flashTimer = 8;
@@ -360,9 +415,8 @@ function scored(who) {
   flashTimer = 20;
   if (scores.p1 >= WIN_SCORE || scores.p2 >= WIN_SCORE) {
     gameState = 'gameover';
-    const name = scores.p1 >= WIN_SCORE
-      ? 'Player 1 wins'
-      : (gameMode === 1 ? 'AI wins' : 'Player 2 wins');
+    const name = scores.p1 >= WIN_SCORE ? 'Player 1 wins'
+                 : (gameMode === 1 ? 'AI wins' : 'Player 2 wins');
     document.getElementById('winner-text').textContent = name;
     document.getElementById('gameover').style.display = 'flex';
   } else {
@@ -373,32 +427,48 @@ function scored(who) {
 
 // ── Render ───────────────────────────────────────────────────────────────────
 function draw() {
-  // Background
   ctx.fillStyle = COLORS.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Flash on score
   if (flashTimer > 0) {
-    ctx.fillStyle = `rgba(200,240,96,${(flashTimer / 20) * 0.06})`;
+    const [r,g,b] = COLORS.flash;
+    ctx.fillStyle = `rgba(${r},${g},${b},${(flashTimer / 20) * 0.07})`;
     ctx.fillRect(0, 0, W, H);
     flashTimer--;
   }
+
+  // Borders with flash on bounce
+  const topAlpha = borderFlash === 'top'    && borderFlashTimer > 0 ? 0.55 + (borderFlashTimer / 10) * 0.45 : 0.55;
+  const botAlpha = borderFlash === 'bottom' && borderFlashTimer > 0 ? 0.55 + (borderFlashTimer / 10) * 0.45 : 0.55;
+  if (borderFlashTimer > 0) borderFlashTimer--;
+
+  ctx.lineWidth = 2;
+
+  // Parse border color and apply alpha
+  function borderColor(alpha) {
+    return currentTheme === 'dark'
+      ? `rgba(255,255,255,${alpha})`
+      : `rgba(0,0,0,${alpha})`;
+  }
+
+  ctx.strokeStyle = borderColor(topAlpha);
+  ctx.beginPath(); ctx.moveTo(0, 1); ctx.lineTo(W, 1); ctx.stroke();
+
+  ctx.strokeStyle = borderColor(botAlpha);
+  ctx.beginPath(); ctx.moveTo(0, H - 1); ctx.lineTo(W, H - 1); ctx.stroke();
 
   // Center net
   ctx.setLineDash([8, 12]);
   ctx.strokeStyle = COLORS.net;
   ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(W / 2, 0);
-  ctx.lineTo(W / 2, H);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
   ctx.setLineDash([]);
 
   // Scores
   ctx.font = '700 48px Courier New';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillStyle = COLORS.score;
   ctx.fillText(scores.p1, W / 2 - 60, 18);
   ctx.fillText(scores.p2, W / 2 + 60, 18);
 
@@ -412,12 +482,11 @@ function draw() {
   ctx.fillStyle = COLORS.ball;
   ctx.fill();
 
-  // "press any key" prompt after scoring
   if (gameState === 'scored') {
     ctx.font = '11px Courier New';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillStyle = COLORS.prompt;
     ctx.fillText('press enter or click to serve', W / 2, H - 22);
   }
 }
@@ -435,7 +504,6 @@ function loop(ts) {
   rafId = requestAnimationFrame(loop);
   const dt = Math.min((ts - (lastTime || ts)) / 1000, 0.05);
   lastTime = ts;
-
   if (gameState === 'playing') update(dt);
   draw();
 }
@@ -445,9 +513,8 @@ function setMode(m) {
   gameMode = m;
   document.getElementById('btn-1p').classList.toggle('active', m === 1);
   document.getElementById('btn-2p').classList.toggle('active', m === 2);
-  const show2p = m === 1;
-  document.getElementById('diff-label').style.display = show2p ? '' : 'none';
-  document.getElementById('diff-row').style.display   = show2p ? '' : 'none';
+  document.getElementById('diff-label').style.display = m === 1 ? '' : 'none';
+  document.getElementById('diff-row').style.display   = m === 1 ? '' : 'none';
   updateHint();
 }
 
@@ -495,23 +562,17 @@ function goMenu() {
   scores = { p1: 0, p2: 0 };
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────────────────
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-// Polyfill roundRect for older browsers
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
     this.beginPath();
-    this.moveTo(x + r, y);
-    this.lineTo(x + w - r, y);
-    this.quadraticCurveTo(x + w, y, x + w, y + r);
-    this.lineTo(x + w, y + h - r);
-    this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    this.lineTo(x + r, y + h);
-    this.quadraticCurveTo(x, y + h, x, y + h - r);
-    this.lineTo(x, y + r);
-    this.quadraticCurveTo(x, y, x + r, y);
-    this.closePath();
+    this.moveTo(x+r,y); this.lineTo(x+w-r,y);
+    this.quadraticCurveTo(x+w,y,x+w,y+r); this.lineTo(x+w,y+h-r);
+    this.quadraticCurveTo(x+w,y+h,x+w-r,y+h); this.lineTo(x+r,y+h);
+    this.quadraticCurveTo(x,y+h,x,y+h-r); this.lineTo(x,y+r);
+    this.quadraticCurveTo(x,y,x+r,y); this.closePath();
   };
 }
 

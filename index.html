@@ -146,36 +146,51 @@
     text-align: center;
   }
 
-  /* ── Theme toggle button (top-right of canvas) ── */
-  #theme-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+  /* ── Below-canvas button bar ── */
+  #btn-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+  }
+
+  #theme-btn, #end-btn {
     background: transparent;
-    border: 1px solid var(--btn-border);
-    color: var(--fg);
     font-family: 'Courier New', monospace;
     font-size: 11px;
     letter-spacing: 0.08em;
     padding: 5px 10px;
     border-radius: 3px;
     cursor: pointer;
-    z-index: 10;
     text-transform: uppercase;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  #theme-btn {
+    border: 1px solid var(--btn-border);
+    color: var(--fg);
+  }
+  #end-btn {
+    border: 1px solid rgba(200,80,80,0.4);
+    color: rgba(200,80,80,0.7);
+    display: none;
+    margin-left: auto;
   }
   #theme-btn:hover {
     background: var(--btn-hover);
     border-color: var(--btn-active-border);
+  }
+  #end-btn:hover {
+    background: rgba(200,80,80,0.08);
+    border-color: rgba(200,80,80,0.8);
+    color: rgba(200,80,80,1);
   }
 </style>
 </head>
 <body>
 <div id="wrapper">
   <canvas id="c"></canvas>
-
-  <!-- Theme toggle — visible at all times -->
-  <button id="theme-btn" onclick="toggleTheme()">☀ Light</button>
 
   <!-- Menu overlay -->
   <div class="overlay" id="menu">
@@ -220,7 +235,11 @@
     </div>
   </div>
 
-  <div id="hint-bar"></div>
+  <div id="btn-bar">
+    <button id="theme-btn" onclick="toggleTheme()">☀ Light</button>
+    <div id="hint-bar"></div>
+    <button id="end-btn" onclick="goMenu()">✕ End game</button>
+  </div>
 </div>
 
 <script>
@@ -292,7 +311,7 @@ let gameMode   = 1;
 let difficulty = 'medium';
 let gameState  = 'menu';
 
-let ball, p1, p2, scores, flashTimer, borderFlashTimer, borderFlash, lastTime, aiTarget, aiError;
+let ball, p1, p2, scores, hits, flashTimer, borderFlashTimer, borderFlash, lastTime, aiTarget, aiError;
 const keys = {};
 
 function initObjects() {
@@ -305,6 +324,7 @@ function initObjects() {
   p1 = { y: H / 2 - PAD_H / 2, vy: 0 };
   p2 = { y: H / 2 - PAD_H / 2, vy: 0 };
   scores = scores || { p1: 0, p2: 0 };
+  hits = { p1: 0, p2: 0 };
   flashTimer = 0;
   borderFlashTimer = 0;
   borderFlash = null;
@@ -408,6 +428,7 @@ function bouncePaddle(pad, dir) {
   ball.vx = dir * ball.speed * Math.cos(angle);
   ball.vy = ball.speed * Math.sin(angle);
   flashTimer = 8;
+  if (dir === 1) hits.p1++; else hits.p2++;
 }
 
 function scored(who) {
@@ -421,6 +442,7 @@ function scored(who) {
     document.getElementById('gameover').style.display = 'flex';
   } else {
     gameState = 'scored';
+    hits = { p1: 0, p2: 0 };
     resetBall(who === 1 ? 1 : -1);
   }
 }
@@ -482,12 +504,17 @@ function draw() {
   ctx.fillStyle = COLORS.ball;
   ctx.fill();
 
+  // Hit counter — bottom center
+  ctx.font = '11px Courier New';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = COLORS.prompt;
+  const p2Label = gameMode === 1 ? 'ai' : 'p2';
+  ctx.fillText(`hits — p1: ${hits.p1}  ${p2Label}: ${hits.p2}`, W / 2, H - 14);
+
   if (gameState === 'scored') {
-    ctx.font = '11px Courier New';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
     ctx.fillStyle = COLORS.prompt;
-    ctx.fillText('press enter or click to serve', W / 2, H - 22);
+    ctx.fillText('press enter or click to serve', W / 2, H - 30);
   }
 }
 
@@ -534,11 +561,13 @@ function updateHint() {
 
 function startGame() {
   scores = { p1: 0, p2: 0 };
+  hits   = { p1: 0, p2: 0 };
   initObjects();
   ['menu','pause','gameover'].forEach(id =>
     document.getElementById(id).style.display = 'none');
   gameState = 'playing';
   updateHint();
+  document.getElementById('end-btn').style.display = 'block';
   if (!rafId) loop(performance.now());
 }
 
@@ -558,6 +587,7 @@ function goMenu() {
   ['pause','gameover'].forEach(id =>
     document.getElementById(id).style.display = 'none');
   document.getElementById('menu').style.display = 'flex';
+  document.getElementById('end-btn').style.display = 'none';
   initObjects();
   scores = { p1: 0, p2: 0 };
 }
